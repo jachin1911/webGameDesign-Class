@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>This is my web page!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas" width="800" height="600"></canvas>
+
+        <script>
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+
+            // draw green landscape and blue sky
+            ctx.fillStyle = 'green'
+            ctx.fillRect(0,400,800,200);
+            ctx.fillStyle = 'lightblue'
+            ctx.fillRect(0,0,800,400);
+
+            // draw tree trunk
+            ctx.fillStyle = 'brown'
+            ctx.fillRect(200,300,50,200);
+
+            // draw tree leaves
+            ctx.beginPath(); // start a new path
+            ctx.fillStyle='lightgreen';
+            ctx.arc(225,175,150,0,2.0*Math.PI);
+            ctx.fill(); // actually draw the path on the canvas
+
+            // draw sun
+            ctx.beginPath(); // start a new path
+            ctx.fillStyle='yellow';
+            ctx.arc(650,100,50,0,2.0*Math.PI);
+            ctx.fill(); // actually draw the path on the canvas
+
+            // draw sun rays
+            ctx.beginPath(); // start a new path
+            ctx.lineWidth = 4;
+            ctx.strokeStyle='yellow';
+            ctx.moveTo(650,30);
+            ctx.lineTo(650,170);
+            ctx.moveTo(580,100);
+            ctx.lineTo(720,100);
+            ctx.moveTo(600,150);
+            ctx.lineTo(700,50);
+            ctx.moveTo(600,50);
+            ctx.lineTo(700,150);
+            ctx.stroke(); // actually draw the path on the canvas
+
+        </script>
+
+    </body>
+</html>
