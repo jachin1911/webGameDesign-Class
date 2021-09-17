@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>This is my web page!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas"
+                width="800" height="600"></canvas>
+        <script>
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'red';
+            
+            ctx.beginPath(); // start a new path
+
+            // create a series of drawing commands
+            ctx.moveTo(100,100);
+            ctx.lineTo(75,150);
+            ctx.lineTo(125,150);
+            ctx.lineTo(100,100);
+
+            ctx.moveTo(200,100);
+            ctx.lineTo(175,150);
+            ctx.lineTo(225,150);
+            ctx.lineTo(200,100);
+
+            ctx.moveTo(50,200);
+            ctx.lineTo(100,230);
+            ctx.lineTo(200,230);
+            ctx.lineTo(250,200);
+
+            ctx.stroke(); // actually draw the path on the canvas
+        </script>
+    </body>
+</html>

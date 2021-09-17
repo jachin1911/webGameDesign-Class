@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>This is my web page!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas"
+                width="800" height="600"></canvas>
+        <script>
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+
+            ctx.fillStyle = "blue";
+            ctx.fillRect(0,0,800,600);
+        </script>
+    </body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>This is my web page!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas"
+                width="800" height="600"></canvas>
+        <script>
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'red';
+            
+            ctx.beginPath(); // start a new path
+
+           // complete circle, from 0 to 2*PI radians
+           ctx.arc(200,150,100,0,2*Math.PI);
+           ctx.fillStyle='red';
+           ctx.fill(); // actually draw the path
+
+           ctx.beginPath(); // start a new path
+           // arc from 0.5*PI to 1.5*PI radians
+           ctx.arc(200,400,100,0.5*Math.PI,1.5*Math.PI);
+           ctx.fillStyle='red';
+           ctx.fill(); // actually draw 
+        
+
+           ctx.stroke(); // actually draw the path on the canvas
+        </script>
+    </body>
+</html>
