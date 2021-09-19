@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Treasure Hunt!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas" width="800" height="600"></canvas>
+
+        <script>
+            // declare and initialize global variables
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            
+            var shipX = 100;
+            var shipY = 200;
+            var shipWidth = 50;
+            var shipHeight = 50;
+            var shipColor = 'brown';
+
+            var treasureX = 400;
+            var treasureY = 300;
+            var treasureXDelta = 1;
+            var treasureYDelta = 3;
+            
+            var treasureWidth = 100;
+            var treasureHeight = 100;
+            var treasureColor = 'green';
+
+            // start a timer to run the gameLoop every 10 milliseconds
+            var timer = setInterval(gameLoop,10);
+
+            // The main game loop
+            function gameLoop() {
+                // clear the frame by painting a white rectangle over the canvas
+                ctx.fillStyle='white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // draw the ship rectangle
+                drawRectangle(shipX, shipY, shipWidth, shipHeight, shipColor);
+
+                // draw the treasure rectangle
+                drawRectangle(treasureX, treasureY, treasureWidth, treasureHeight, treasureColor);
+
+                // subtract one to the current ship X and Y-positions
+                shipX--;
+                shipY--;
+
+                if (shipX > 800) {  // if the X value is too large
+                    shipX = 0;      // reset it to zero
+                }
+                if (shipX < 0) {    // if the X value is too small
+                    shipX = 800;    // reset it to zero
+                }
+                if (shipY > 600) {  // if the Y value is too large
+                    shipY = 0;      // reset it to zero
+                }
+                if (shipY < 0) {    // if the Y value is too small
+                    shipY = 600;    // reset it to zero
+                }
+
+                // adjust the treasure position in creative ways
+                treasureX += treasureXDelta;
+                treasureY += treasureYDelta;
+
+                if (treasureX > 800) {      // if the X value is too large
+                    treasureXDelta *= -1;   // reverse X direction
+                }
+                if (treasureY > 600) {      // if the Y value is too large
+                    treasureYDelta *= -1;   // reverse Y direction
+                }
+                if (treasureX < 0) {        // if the X value is too small
+                    treasureXDelta *= -1;   // reverse X direction
+                }
+                if (treasureY < 0) {        // if the Y value is too small
+                    treasureYDelta *= -1;   // reverse Y direction
+                }
+
+            }
+            function drawRectangle(x, y, width, height, color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, width, height);
+                ctx.fill();                
+            }
+
+        </script>
+    </body>
+</html>

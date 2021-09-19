@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Treasure Hunt!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas" width="800" height="600"></canvas>
+
+        <script>
+            // declare and initialize global variables
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            
+            var shipX = 100;
+            var shipY = 200;
+            var shipWidth = 50;
+            var shipHeight = 50;
+
+            // draw brown block for the ship
+            ctx.fillStyle = 'brown';
+            ctx.fillRect(shipX, shipY, shipWidth, shipHeight);
+            ctx.fill();
+
+            // do some math on the variables
+            shipX += 100;
+            shipY -= 100;
+            shipWidth *= 2;
+            shipHeight /= 2;
+
+            // draw ship in the new position and size
+            ctx.fillStyle = 'brown';
+            ctx.fillRect(shipX, shipY, shipWidth, shipHeight);
+            ctx.fill();
+
+        </script>
+    </body>
+</html>

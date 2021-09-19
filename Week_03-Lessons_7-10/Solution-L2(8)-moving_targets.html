@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Treasure Hunt!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas" width="800" height="600"></canvas>
+
+        <script>
+            // declare and initialize global variables
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            
+            var shipX = 100;
+            var shipY = 200;
+            var shipWidth = 50;
+            var shipHeight = 50;
+            var shipColor = 'brown';
+
+            var treasureX = 400;
+            var treasureY = 300;
+            var treasureWidth = 100;
+            var treasureHeight = 100;
+            var treasureColor = 'green';
+
+            // start a timer to run the gameLoop every 10 milliseconds
+            var timer = setInterval(gameLoop,10);
+
+            // The main game loop
+            function gameLoop() {
+                // clear the frame by painting a white rectangle over the canvas
+                ctx.fillStyle='white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // draw the ship rectangle
+                drawRectangle(shipX, shipY, shipWidth, shipHeight, shipColor);
+
+                // draw the treasure rectangle
+                drawRectangle(treasureX, treasureY, treasureWidth, treasureHeight, treasureColor);
+
+                // add one to the current ship X and Y-positions
+                shipX++;
+                shipY++;
+
+                // adjust the treasure position in creative ways
+                treasureX -= 1;
+                treasureY += 3;
+            }
+            function drawRectangle(x, y, width, height, color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, width, height);
+                ctx.fill();                
+            }
+
+        </script>
+    </body>
+</html>
