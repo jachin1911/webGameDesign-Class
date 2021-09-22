@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Treasure Hunt!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas" width="800" height="600"></canvas>
+
+        <script>
+            // declare and initialize global variables
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+
+            addEventListener("keydown", myKeyDown);
+            addEventListener("keyup", myKeyUp);
+            
+            // declare a ship block object
+            var ship = new block(100,200,1,1,50,50,'brown');
+            
+            // declare a treasure block object
+            var treasure = new block(400,300,1,3,100,100,'green');
+            var treasure2 = new block(500,200,2,2,100,100,'green');
+            var treasure3 = new block(700,0,-1,-2,100,100,'green');
+            var treasure4 = new block(200,600,0,1,100,100,'green');
+            var treasure5 = new block(150,400,-1,0,100,100,'green');
+            
+            // start a timer to run the gameLoop every 10 milliseconds
+            var timer = setInterval(gameLoop,10);
+            
+            // The main game loop
+            function gameLoop() {
+                // clear the frame by painting a white rectangle over the canvas
+                ctx.fillStyle='white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // draw the ship rectangle
+                drawRectangle(ship);
+
+                // draw the treasure rectangle
+                drawRectangle(treasure);
+                drawRectangle(treasure2);
+                drawRectangle(treasure3);
+                drawRectangle(treasure4);
+                drawRectangle(treasure5);
+
+                // move and wrap the ship block
+                ship.moveAndWrap(800,600);
+
+                // move and bounce the treasure block
+                treasure.moveAndBounce(800,600);
+                treasure2.moveAndBounce(800,600);
+                treasure3.moveAndBounce(800,600);
+                treasure4.moveAndBounce(800,600);
+                treasure5.moveAndBounce(800,600);
+            }
+
+            function drawRectangle(myBlock) {
+                ctx.fillStyle = myBlock.color;
+                ctx.fillRect(myBlock.x, myBlock.y, myBlock.width, myBlock.height);
+                ctx.fill();
+            }
+
+            function block(xLoc, yLoc, deltaX, deltaY, width, height, color) {
+                this.x = xLoc;
+                this.y = yLoc;
+                this.dx = deltaX;
+                this.dy= deltaY;
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                
+                this.moveAndWrap = function (screenWidth, screenHeight) {
+                    // update the current block position using current deltas
+                    this.x += this.dx;
+                    this.y += this.dy;
+
+                    if (this.x > screenWidth) {     // if the X value is too large
+                        this.x = 0;                 // reset it to zero
+                    }
+                    if (this.y > screenHeight) {    // if the Y value is too large
+                        this.y = 0;                 // reset it to zero
+                    }
+                    if (this.x < 0) {               // if the X value is too small
+                        this.x = screenWidth;       // reset it to screenWidth
+                    }
+                    if (this.y < 0) {               // if the Y value is too small
+                        this.y = screenHeight;      // reset it to screenHeight
+                    }
+                }
+
+                this.moveAndBounce = function (screenWidth, screenHeight) {
+                    // update the current block position using current deltas
+                    this.x += this.dx;
+                    this.y += this.dy;
+                    
+                    if (this.x > screenWidth) {     // if the X value is too large
+                        this.dx *= -1;              // reverse X direction
+                    }
+                    if (this.y > screenHeight) {    // if the Y value is too large
+                        this.dy *= -1;              // reverse Y direction
+                    }
+                    if (this.x < 0) {               // if the X value is too small
+                        this.dx *= -1;              // reverse X direction
+                    }
+                    if (this.y < 0) {               // if the Y value is too small
+                        this.dy *= -1;              // reverse Y direction
+                    }
+                }
+            }
+
+            function myKeyDown(e) {
+                var keycode = e.keyCode;
+                if (keycode == 65) {                // if the 'a' key was pressed
+                    ship.dx--;                      //decrease the ship's "x" speed
+                }
+                else if (keycode == 68) {           // if the 'd' key was pressed
+                    ship.dx++;                      // increase the ship's "x" speed
+                }
+                else if (keycode == 87) {           // if the 'w' key was pressed
+                    ship.dy--;                      // decrease the ship's "y" speed
+                }
+                else if (keycode == 88) {           // if the 'x' key was pressed
+                    ship.dy++;                      // increase the ship's "y" speed
+                }
+            }
+
+            function myKeyUp(e) {
+                var keycode = e.keyCode;
+                if (keycode == 32) {                // if the 'space' key was released
+                    ship.dx = 0;                    // reset the ship's "x" speed
+                    ship.dy = 0;                    // reset the ship's "y" speed
+                }
+            }
+
+        </script>
+    </body>
+</html>
