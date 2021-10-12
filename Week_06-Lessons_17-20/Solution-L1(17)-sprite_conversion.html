@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Treasure Hunt!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas" width="800" height="600"></canvas>
+        <p id="mousePosition"></p>
+        <script type="text/javascript" src="KeyState.js"></script>
+        <script type="text/javascript" src="MouseState.js"></script>
+        <script type="text/javascript" src="Sprite.js"></script>
+        <script>
+            // declare and initialize global variables
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            var keys = new KeyState();
+            var mouseInfo = new MouseState(canvas);
+            
+            // declare and initialize sprites
+            var ship = new Sprite("ship.png");
+            ship.x = 150;
+            ship.y = 200;
+
+            var ocean = new Sprite("ocean.png");
+            ocean.x = 0;
+            ocean.y = 0;
+
+            var treasure = new Sprite("treasure.png");
+            treasure.x = 300;
+            treasure.y = 300;
+            
+            // start a timer to run the gameLoop every 10 milliseconds
+            var timer = setInterval(gameLoop,10);
+            
+            // The main game loop
+            function gameLoop() {
+
+                //draw the background first
+                ocean.draw(ctx);
+
+                // handle key presses
+                if (keys.isKeyDown(65)) {           // if the 'a' key was pressed
+                    ship.dx -= 0.1;                 // decrease the ship's "x" speed
+                }
+                if (keys.isKeyDown(68)) {           // if the 'd' key was pressed
+                    ship.dx += 0.1;                 // increase the ship's "x" speed
+                }
+                if (keys.isKeyDown(87)) {           // if the 'w' key was pressed
+                    ship.dy -= 0.1;                 // decrease the ship's "y" speed
+                }
+                if (keys.isKeyDown(88)) {           // if the 'x' key was pressed
+                    ship.dy += 0.1;                 // increase the ship's "y" speed 
+                }
+
+                if (keys.wasKeyClicked(32)) {       // if the 'space' key was clicked
+                    ship.dx = 0;                    // reset the ship's "x" speed
+                    ship.dy = 0;                    // reset the ship's "y" speed
+                }
+
+                // if in stealth mode (SHIFT+S)
+                if (keys.isKeyDown(16) && keys.isKeyDown(83)) {
+                    // do nothing in stealth mode
+                }
+                else {
+                    // draw the ship image
+                    ship.draw(ctx);
+                }            
+
+                //draw the treasure images
+                treasure.draw(ctx);
+
+                // move and wrap the ship block
+                ship.moveAndWrap(800,600);
+
+                 // if the user is holding SHIFT+T
+                if (keys.isKeyDown(16) && keys.isKeyDown(84)) {
+                     ship.moveAndWrap(800,600);
+                     ship.moveAndWrap(800,600);
+                }
+
+                if (mouseInfo.wasButtonClicked(0)) {
+                    ship.x = mouseInfo.getX();
+                    ship.y = mouseInfo.getY();
+                }
+
+                
+                var mouseP = document.getElementById("mousePosition");
+                mouseP.innerHTML = mouseInfo.getX() + ',' + mouseInfo.getY();
+
+                keys.saveState();
+                mouseInfo.saveState();
+            }
+            
+        </script>
+    </body>
+</html>
