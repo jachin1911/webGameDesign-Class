@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Treasure Hunt!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas" width="800" height="600"></canvas>
+        <p id="mousePosition"></p>
+        <script type="text/javascript" src="KeyState.js"></script>
+        <script type="text/javascript" src="MouseState.js"></script>
+        <script type="text/javascript" src="Sprite.js"></script>
+        <script>
+            // declare and initialize global variables
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            var keys = new KeyState();
+            var mouseInfo = new MouseState(canvas);
+            var NUM_TREASURES = 5;
+            var NUM_SHOTS = 2;
+                                    
+            // declare and initialize sprites            
+            var ship = new Sprite("ship.png");
+            ship.x = 150;
+            ship.y = 200;
+
+            var ocean = new Sprite("ocean.png");
+            ocean.x = 0;
+            ocean.y = 0;  
+            
+            var treasures = [];                     // declare empty treasures array
+            for (i=0; i<NUM_TREASURES; i++) {
+                treasures[i] = new Sprite("treasure.png");
+                treasures[i].x = Math.floor(Math.random() * 650);
+                treasures[i].y = Math.floor(Math.random() * 470);
+            }
+
+            var shots = [];                         // declare empty shots array
+            for (i=0; i<NUM_SHOTS; i++) {
+                shots[i] = new Sprite("shot.png");
+                shots[i].isAlive = false;           // this shot is not yet active
+            }
+            
+            // start a timer to run the gameLoop every 10 milliseconds
+            var timer = setInterval(gameLoop,10);
+            
+            // The main game loop
+            function gameLoop() {
+
+                //draw the background first
+                ocean.draw(ctx);
+
+                // handle key presses
+                if (keys.isKeyDown(65)) {           // if the 'a' key was pressed
+                    ship.dx -= 0.1;                 // decrease the ship's "x" speed
+                }
+                if (keys.isKeyDown(68)) {           // if the 'd' key was pressed
+                    ship.dx += 0.1;                 // increase the ship's "x" speed
+                }
+                if (keys.isKeyDown(87)) {           // if the 'w' key was pressed
+                    ship.dy -= 0.1;                 // decrease the ship's "y" speed
+                }
+                if (keys.isKeyDown(88)) {           // if the 'x' key was pressed
+                    ship.dy += 0.1;                 // increase the ship's "y" speed 
+                }
+
+                if (keys.wasKeyClicked(32)) {       // if the 'space' key was clicked
+                    fireShot();                     // fire a shot
+                }
+
+                // if in stealth mode (SHIFT+S)
+                if (keys.isKeyDown(16) && keys.isKeyDown(83)) {
+                    // do nothing in stealth mode
+                }
+                else {
+                    // draw the ship image
+                    ship.draw(ctx);
+                }            
+
+                //draw the treasure images
+                for (i=0; i<NUM_TREASURES; i++) {
+                    treasures[i].draw(ctx);
+                }
+
+                // move and wrap the ship block
+                ship.moveAndWrap(800,600);
+
+                 // if the user is holding SHIFT+T
+                if (keys.isKeyDown(16) && keys.isKeyDown(84)) {
+                     ship.moveAndWrap(800,600);
+                     ship.moveAndWrap(800,600);
+                }
+
+                //draw and move active shots
+                for (i=0; i<NUM_SHOTS; i++) {
+                    if (shots[i].isAlive) {
+                        shots[i].moveAndVanish(800,600);
+                        shots[i].draw(ctx);
+                    }
+                }
+
+                // collision detection between ship and each of the islands
+                for (i=0; i<NUM_TREASURES; i++) {
+                    if (treasures[i].isCollided(ship)) {
+                        treasures[i].x = Math.floor(Math.random() * 650);
+                        treasures[i].y = Math.floor(Math.random() * 470);
+                    }
+                }                
+
+                if (mouseInfo.wasButtonClicked(0)) {
+                    ship.x = mouseInfo.getX();
+                    ship.y = mouseInfo.getY();
+                }
+
+                
+                var mouseP = document.getElementById("mousePosition");
+                mouseP.innerHTML = mouseInfo.getX() + ',' + mouseInfo.getY();
+
+                keys.saveState();
+                mouseInfo.saveState();
+            }
+
+            function fireShot() {
+                for (i=0; i<NUM_SHOTS; i++) {                                               // look for inactive sprite in shots array
+                    if (!shots[i].isAlive) {                                                // if this shot is not alive
+                        shots[i].isAlive = true;                                            // launch a new shot at this position
+                        
+                        shots[i].x = ship.x + ship.width/2 - shots[i].width/2;              // shot's initial position matches ship's
+                        shots[i].y = ship.y + ship.height/2 - shots[i].height/2;
+
+                        var shotSpeed = 2.0;                                                // set desired shot speed
+                        var shipSpeed = Math.sqrt(ship.dx * ship.dx + ship.dy * ship.dy);   // calculate ship's current speed
+
+                        shots[i].dx = shotSpeed * ship.dx / shipSpeed;                      //calculate shot dx using ship direction
+                        shots[i].dy = shotSpeed * ship.dy / shipSpeed;                      //calculate shot dy using ship direction
+
+                        break;                                                              // don't look for any more shots
+                    }
+                }
+            }
+            
+        </script>
+    </body>
+</html>
