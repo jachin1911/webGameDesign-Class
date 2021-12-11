@@ -1,5 +1,5 @@
 /*
- Copyright 2015, CompuScholar, Inc. and Homeschool Programming, Inc.
+ Copyright 2015, CompuScholAr, Inc. and Homeschool Programming, Inc.
 
  Author: Chris Yust
  Last updated:  05/16/2017
