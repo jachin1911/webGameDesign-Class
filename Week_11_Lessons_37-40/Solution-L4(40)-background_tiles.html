@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Treasure Hunt!</title>
+    </head>
+
+    <body>
+        <canvas style="border:1px solid black;" id="myCanvas" width="800" height="600"></canvas>
+        <script type="text/javascript" src="KeyState.js"></script>
+        <script type="text/javascript" src="MouseState.js"></script>
+        <script type="text/javascript" src="Sprite.js"></script>
+        <script type="text/javascript" src="howler.js"></script>
+        <script type="text/javascript" src="Viewport.js"></script>
+        <script>
+            // declare and initialize global variables
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            var keys = new KeyState();
+            var mouseInfo = new MouseState(canvas);
+            var NUM_TREASURES = 5;
+            var NUM_SHOTS = 2;
+            var score;
+            var startDate;
+            var stopTime;
+            var ship;
+            var ocean;
+            var treasures;
+            var shots;
+            var timer;
+            var playerName;
+            var fog;
+            var fogEnabled;
+            var netSound = new Howl({urls: ['net.mp3']});
+            var gameOverSound = new Howl({urls: ['gameover.mp3']});
+            var treasureSound = new Howl({urls: ['treasure.mp3']});
+            var VIEW_WIDTH = 800;
+            var VIEW_HEIGHT = 600;
+            var WORLD_WIDTH = 2 * VIEW_WIDTH;
+            var WORLD_HEIGHT = 2 * VIEW_HEIGHT;
+            var gameView = new Viewport(VIEW_WIDTH,VIEW_HEIGHT,WORLD_WIDTH,WORLD_HEIGHT);
+            var OCEAN_TILE_WIDTH = 80;
+            var OCEAN_TILE_HEIGHT = 60;
+            var numOceanCols = WORLD_WIDTH / OCEAN_TILE_WIDTH;
+            var numOceanRows = WORLD_HEIGHT / OCEAN_TILE_HEIGHT;
+            var emptyOceanTileName = "ocean1.png";
+            var NUM_SPECIALTY_OCEAN_TILES = 4;
+            var oceanTileNames = ["ocean2.png","ocean3.png","ocean4.png","ocean5.png"];
+            var oceanTiles;
+            var NUM_FOG_TILES = 10;
+            var fogTiles;
+            
+            // this function contains all of the initialization logic to start or re-start the game
+            function startGame() {
+                score = 0;
+                startDate = new Date();
+                stopTime = 30 + startDate.getTime() / 1000;
+                                                
+                // initialize sprites            
+                ship = new Sprite("animated_ship.png",5);
+                ship.continuousAnimation = false;
+                ship.animationInterval = 200;
+                ship.x = 150;
+                ship.y = 200;
+
+                // initialize the viewport for the game view
+                // we want to center it on the ship coordinates
+                var viewportX = ship.x - VIEW_WIDTH / 2;
+                var viewportY = ship.y - VIEW_HEIGHT / 2;
+                gameView.setView(viewportX,viewportY);
+
+                //ocean = new Sprite("ocean.png");
+                //ocean.x = 0;
+                //ocean.y = 0;
+                //ocean.setScale(2);
+
+                // initialize the 2D oceanTiles array
+                oceanTiles = [];
+                for (var col = 0; col < numOceanCols; col++) {
+                    oceanTiles[col] = [];
+                }
+
+                // use nested for() loops to walk over each 2D array element
+                for (var col=0; col < numOceanCols; col++) {
+                    for (var row=0; row<numOceanRows; row++) {
+                        // if 10% chance is true
+                        if (Math.floor(Math.random() * 100) < 10) {
+                            // pick a random specialty tile image
+                            var randomTile = Math.floor(Math.random() * NUM_SPECIALTY_OCEAN_TILES );
+
+                            // create a new specialty tile sprite
+                            oceanTiles[col][row] = new Sprite(oceanTileNames[randomTile]);
+                        }
+                        else {
+                            // create a tile based on the empty ocean
+                            oceanTiles[col][row] = new Sprite(emptyOceanTileName);
+                        }
+
+                        // calculate the X and Y coordinates for this tile
+                        oceanTiles[col][row].x = col * OCEAN_TILE_WIDTH;
+                        oceanTiles[col][row].y = row * OCEAN_TILE_HEIGHT;
+                    }
+                }
+
+                //fog = new Sprite("fog.png");
+                //fog.x = 0;
+                //fog.y = 0;
+                //fog.setScale(2);
+
+                fogTiles = [];
+                for (var i=0; i<NUM_FOG_TILES; i++) {
+                    fogTiles[i] = new Sprite("fog_tile.png");
+                    fogTiles[i].x = Math.floor(Math.random() * WORLD_WIDTH);
+                    fogTiles[i].y = Math.floor(Math.random() * WORLD_HEIGHT);
+                }
+
+                // get the number of treasures
+                var numTreasuresControl = document.getElementById("numTreasures");
+                NUM_TREASURES = numTreasuresControl.value;
+                alert("# Treasures: " + NUM_TREASURES);
+
+                // initialize treasures
+                treasures = [];                         // declare empty treasures array
+                for (i=0; i<NUM_TREASURES; i++) {
+                    treasures[i] = new Sprite("animated_treasure.png",4);
+                    treasures[i].animationInterval = 200;
+                    treasures[i].currentFrame = Math.floor(Math.random() * 4);
+                    treasures[i].x = Math.floor(Math.random() * 650);
+                    treasures[i].y = Math.floor(Math.random() * 470);
+                }
+            
+                // initialize shots
+                shots = [];                             // declare empty shots array
+                for (i=0; i<NUM_SHOTS; i++) {
+                    shots[i] = new Sprite("animated_shot.png",3);
+                    shots[i].animationInterval = 100;
+                    shots[i].isAlive = false;           // this shot is not yet active
+                }
+
+                //disable any old timer first
+                clearTimeout(timer);
+
+                // get the player's name
+                var nameControl = document.getElementById("playerName");
+                playerName = nameControl.value;
+                alert("Let's go, " + playerName);
+
+                // get the fog setting
+                var fogControl = document.getElementById("fogEnabled");
+                fogEnabled = fogControl.checked;
+                //alert("Fog Enabled: " + fogEnabled);
+
+                // initialize the volume
+                changeVolume();
+
+                // start a timer to run the gameLoop every 10 milliseconds
+                timer = setInterval(gameLoop,10);
+            }
+
+            // change the volume while the game is playing
+            function changeVolume() {
+                var volumeControl = document.getElementById("volume");
+                Howler.volume(volumeControl.value);
+
+                var soundTrackControl = document.getElementById("soundTrack");
+                soundTrackControl.volume = volumeControl.value;
+            }
+                                   
+            // The main game loop
+            function gameLoop() {
+
+                //draw the background first
+                //ocean.draw(ctx);
+                //ocean.drawWithViewport(ctx,gameView);
+
+                for (col=0; col<numOceanCols; col++) {
+                    for (row=0; row<numOceanRows; row++) {
+                        oceanTiles[col][row].drawWithViewport(ctx,gameView);
+                    }
+                }
+
+                // handle key presses
+                if (keys.isKeyDown(65)) {           // if the 'a' key was pressed
+                    ship.dx -= 0.1;                 // decrease the ship's "x" speed
+                }
+                if (keys.isKeyDown(68)) {           // if the 'd' key was pressed
+                    ship.dx += 0.1;                 // increase the ship's "x" speed
+                }
+                if (keys.isKeyDown(87)) {           // if the 'w' key was pressed
+                    ship.dy -= 0.1;                 // decrease the ship's "y" speed
+                }
+                if (keys.isKeyDown(88)) {           // if the 'x' key was pressed
+                    ship.dy += 0.1;                 // increase the ship's "y" speed 
+                }
+
+                ship.setMaxSpeed(1.0);              // don't let the ship move too fast
+
+                if (keys.wasKeyClicked(32)) {       // if the 'space' key was clicked
+                    fireShot();                     // fire a shot
+                }
+
+                // if in stealth mode (SHIFT+S)
+                if (keys.isKeyDown(16) && keys.isKeyDown(83)) {
+                    // do nothing in stealth mode
+                }
+                else {
+                    // draw the ship image
+                    //ship.draw(ctx);
+                    ship.drawWithViewport(ctx,gameView);
+                }            
+
+                //draw the treasure images
+                for (i=0; i<NUM_TREASURES; i++) {
+                    //treasures[i].draw(ctx);
+                    treasures[i].drawWithViewport(ctx,gameView);
+                }
+
+                // move and wrap the ship block
+                //ship.moveAndWrap(800,600);
+                ship.moveAndBounce(WORLD_WIDTH,WORLD_HEIGHT);
+
+                 // if the user is holding SHIFT+T
+                if (keys.isKeyDown(16) && keys.isKeyDown(84)) {
+                     //ship.moveAndWrap(800,600);
+                     //ship.moveAndWrap(800,600);
+                     ship.moveAndBounce(WORLD_WIDTH,WORLD_HEIGHT);
+                     ship.moveAndBounce(WORLD_WIDTH,WORLD_HEIGHT);
+                }
+
+                // update the viewport location to match new ship position
+                // we want to center it on the ship coordinates
+                var viewportX = ship.x - VIEW_WIDTH / 2;
+                var viewportY = ship.y - VIEW_HEIGHT / 2;
+                gameView.setView(viewportX,viewportY);
+
+                //draw and move active shots
+                for (i=0; i<NUM_SHOTS; i++) {
+                    if (shots[i].isAlive) {
+                        //shots[i].moveAndVanish(800,600);
+                        //shots[i].draw(ctx);
+                        shots[i].moveAndVanish(WORLD_WIDTH,WORLD_HEIGHT);
+                        shots[i].drawWithViewport(ctx,gameView);
+                    }
+                }
+
+                // collision detection between ship and each of the islands
+                for (i=0; i<NUM_TREASURES; i++) {
+                    for (j=0; j<NUM_SHOTS; j++) {
+                        // if this treasure is collided with this shot
+                        if (treasures[i].isCollided(shots[j])) {
+                            //treasures[i].x = Math.floor(Math.random() * 650);               // move treasure
+                            //treasures[i].y = Math.floor(Math.random() * 470);
+                            treasures[i].x = Math.floor(Math.random() * (WORLD_WIDTH - treasures[i].width));
+                            treasures[i].y = Math.floor(Math.random() * (WORLD_HEIGHT - treasures[i].height));
+
+                            shots[j].isAlive = false;                                       // disable shot
+                            score = score + 1;                                              // increase score
+                            treasureSound.play();                                           // play treasure sound
+                            ship.startAnimationShort(1,4,0);                                // start short animation
+                        }
+                    }
+                }
+
+                var currentTime = new Date();                                               // capture the current time
+                var remainingSeconds = stopTime - currentTime.getTime() / 1000;             // calculate time remaining
+                if (remainingSeconds <= 0) {                                                // check for end of game
+                    gameOverSound.play();                                                   // play game over sound
+                    alert("Game Over " + playerName + "! Final Score: " + score);
+                    clearTimeout(timer);
+                }
+
+                if (fogEnabled) {
+                    //fog.draw(ctx);
+                    //fog.drawWithViewport(ctx,gameView);
+                    for (var i=0; i<NUM_FOG_TILES; i++) {
+                        fogTiles[i].drawWithViewport(ctx,gameView);
+                    }
+                }
+
+                // show current score
+                ctx.font = "24px Arial";
+                ctx.fillStyle = "red";
+                ctx.fillText(playerName + "'s Score: " + score,20,30);                
+                ctx.fillText("Time Remaining: " + Math.floor(remainingSeconds),550,30);
+
+                if (mouseInfo.wasButtonClicked(0)) {
+                    ship.x = mouseInfo.getX();
+                    ship.y = mouseInfo.getY();
+                }
+                
+                drawMiniMap(ctx);
+
+                keys.saveState();
+                mouseInfo.saveState();
+            }
+
+            function fireShot() {
+                for (i=0; i<NUM_SHOTS; i++) {                                               // look for inactive sprite in shots array
+                    if (!shots[i].isAlive) {                                                // if this shot is not alive
+                        shots[i].isAlive = true;                                            // launch a new shot at this position
+                        
+                        shots[i].x = ship.x + ship.width/2 - shots[i].width/2;              // shot's initial position matches ship's
+                        shots[i].y = ship.y + ship.height/2 - shots[i].height/2;
+
+                        var shotSpeed = 2.0;                                                // set desired shot speed
+                        var shipSpeed = Math.sqrt(ship.dx * ship.dx + ship.dy * ship.dy);   // calculate ship's current speed
+
+                        shots[i].dx = shotSpeed * ship.dx / shipSpeed;                      //calculate shot dx using ship direction
+                        shots[i].dy = shotSpeed * ship.dy / shipSpeed;                      //calculate shot dy using ship direction
+
+                        shots[i].setTTL(2000);                                              // set shot's TTL to 500ms
+                        netSound.play();                                                    // play net sound
+
+                        break;                                                              // don't look for any more shots
+                    }
+                }
+            }
+
+            // this function will sketch a mini-map in the bottom-right corner
+            function drawMiniMap(ctx) {
+                // set the mini-map width and height
+                var mapWidth = 100;
+                var mapHeight = 75;
+                
+                // calculate the mini-map's upper-left coordinate
+                var mapX = VIEW_WIDTH - mapWidth;
+                var mapY = VIEW_HEIGHT - mapHeight;
+                
+                // draw the mini-map frame
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(mapX,mapY,mapWidth,mapHeight);
+                
+                // calculate scale factor for viewport
+                var scaleX = WORLD_WIDTH / mapWidth;
+                var scaleY = WORLD_HEIGHT / mapHeight;
+                
+                // calculate view's upper-left coordinate
+                var viewX = mapX + gameView.x / scaleX;
+                var viewY = mapY + gameView.y / scaleY;
+                
+                // calculate view's width and height
+                var viewWidth = VIEW_WIDTH / scaleX;
+                var viewHeight = VIEW_HEIGHT / scaleY;
+
+                // draw the view's rectangle
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'green';
+                ctx.strokeRect(viewX,viewY,viewWidth,viewHeight);
+                
+                // draw the treasures on the mini-map
+                for (i=0; i<NUM_TREASURES; i++) {
+                    // calculate treasure's location in mini-map coordinates
+                    var treasureX = mapX + treasures[i].x / scaleX;
+                    var treasureY = mapY + treasures[i].y / scaleY;
+                    
+                    // draw a small filled rectangle to show the treasure
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(treasureX,treasureY,3,3);
+                }
+            }
+            
+        </script>
+
+        <div style="width:800px;text-align:center;">
+            <p><button type="button" onclick="blur();startGame();">Start Game</button></p>
+            <p>Player Name: <input type="text" id="playerName" value="Blackbeard"/></p>
+            <p>Number of Treasures: <input type="number" id="numTreasures" min="1" max="10" value="5" /></p>
+            <p>Fog Effect: <input type="checkbox" id="fogEnabled" value="false" /></p>
+            <p>Volume: <input type="range" id="volume" min="0.0" max="1.0" step="0.1" value="1.0" onchange="changeVolume();"/></p>
+            <audio id="soundTrack" controls autoplay loop>
+                <source src="ocean.mp3" type="audio/mp3" />
+            </audio>
+        </div>
+    </body>
+</html>
